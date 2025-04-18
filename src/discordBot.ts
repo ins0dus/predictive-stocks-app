@@ -1,20 +1,19 @@
 import { StockDiscordBot } from './services/discordBotService';
 
-console.log('Starting Discord bot initialization...');
+const botToken = process.env.DISCORD_BOT_TOKEN;
 
-// Initialize the Discord bot with your bot token
-const bot = new StockDiscordBot(process.env.DISCORD_BOT_TOKEN || '');
+if (!botToken) {
+  console.error('DISCORD_BOT_TOKEN is not set in environment variables');
+  process.exit(1);
+}
 
-// Start the bot
-console.log('Attempting to start Discord bot...');
-bot.start().then(() => {
-  console.log('Discord bot started successfully!');
-}).catch(error => {
-  console.error('Failed to start Discord bot:', error);
-  console.error('Error details:', {
-    message: error.message,
-    stack: error.stack,
-    code: error.code
-  });
+console.log('Starting Discord bot...');
+console.log('Bot token length:', botToken.length);
+console.log('Bot token prefix:', botToken.substring(0, 10) + '...');
+
+const bot = new StockDiscordBot(botToken);
+
+bot.start().catch((error) => {
+  console.error('Failed to start bot:', error);
   process.exit(1);
 }); 

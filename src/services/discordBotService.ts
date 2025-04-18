@@ -1,37 +1,23 @@
 import { Client, IntentsBitField, Message, TextChannel, DMChannel, NewsChannel, ThreadChannel, VoiceChannel } from 'discord.js';
 import { StockData } from '../types/stock';
-import { getStockDetails } from './stockService';
+import { getStockQuote, YahooQuote } from './yahooFinanceService';
 import { StockAnalyzer } from './stockAnalyzer';
-import { getStockQuote } from './yahooFinanceService';
 
-export class StockAnalyzer {
-  private lastAnalysis: Date = new Date();
-  private analysisInterval: number = 24 * 60 * 60 * 1000; // 24 hours
-
-  async getDailyPicks(): Promise<string[]> {
-    const now = new Date();
-    if (now.getTime() - this.lastAnalysis.getTime() >= this.analysisInterval) {
-      // Implement stock analysis logic here
-      this.lastAnalysis = now;
-    }
-    return ['AAPL', 'GOOGL', 'MSFT']; // Placeholder
-  }
-
-  getStats(): string {
-    return 'Performance statistics will be implemented soon';
-  }
-
-  getQuoteMessage(quote: StockData): string {
-    return `${quote.symbol} Quote:
-Price: $${quote.price}
-Change: ${quote.change > 0 ? '+' : ''}${quote.change} (${quote.changePercent}%)
-High: $${quote.dailyHigh}
-Low: $${quote.dailyLow}
-Volume: ${quote.volume}
-Market Cap: $${quote.marketCap}
-PE Ratio: ${quote.peRatio}
-Last Updated: ${quote.lastUpdated}`;
-  }
+function convertYahooToStockData(yahooQuote: YahooQuote): StockData {
+  return {
+    symbol: yahooQuote.symbol,
+    name: yahooQuote.longName || yahooQuote.shortName || yahooQuote.symbol,
+    price: yahooQuote.regularMarketPrice,
+    change: yahooQuote.regularMarketChange,
+    changePercent: yahooQuote.regularMarketChangePercent,
+    dailyHigh: yahooQuote.regularMarketDayHigh,
+    dailyLow: yahooQuote.regularMarketDayLow,
+    volume: yahooQuote.regularMarketVolume,
+    marketCap: yahooQuote.marketCap,
+    peRatio: yahooQuote.trailingPE,
+    dividendYield: yahooQuote.dividendYield,
+    lastUpdated: new Date(yahooQuote.regularMarketTime * 1000).toISOString()
+  };
 }
 
 export class StockDiscordBot {
@@ -41,6 +27,8 @@ export class StockDiscordBot {
 
   constructor(token: string) {
     console.log('Creating new Discord bot instance...');
+    console.log('Initializing Discord client with token length:', token.length);
+    
     this.token = token;
     this.client = new Client({
       intents: [
@@ -49,6 +37,7 @@ export class StockDiscordBot {
         IntentsBitField.Flags.MessageContent,
       ],
     });
+    
     this.stockAnalyzer = new StockAnalyzer();
     this.setupEventListeners();
   }
@@ -59,10 +48,12 @@ export class StockDiscordBot {
     this.client.on('ready', () => {
       console.log(`Bot is ready! Logged in as ${this.client.user?.tag}`);
       console.log(`Bot is in ${this.client.guilds.cache.size} servers`);
+      console.log('Bot presence:', this.client.user?.presence);
     });
 
     this.client.on('error', (error) => {
       console.error('Discord client error:', error);
+      console.error('Error stack:', error.stack);
     });
 
     this.client.on('warn', (info) => {
@@ -91,9 +82,7 @@ export class StockDiscordBot {
             return;
           }
 
-          console.log(`Fetching stock data for ${symbol}...`);
-          const quote = await getStockQuote(symbol);
-          await this.sendMessage(channel, this.formatStockMessage(quote));
+          await this.handleStockCommand(channel, symbol);
         } else if (message.content === '!picks') {
           console.log('Fetching daily stock picks...');
           const picks = await this.stockAnalyzer.getDailyPicks();
@@ -126,10 +115,13 @@ export class StockDiscordBot {
   }
 
   async start() {
+    console.log('Starting Discord bot connection...');
     try {
       await this.client.login(this.token);
+      console.log('Discord bot login successful');
     } catch (error) {
-      console.error('Failed to start Discord bot:', error);
+      console.error('Failed to login to Discord:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   }
@@ -140,5 +132,17 @@ export class StockDiscordBot {
 
   private formatPicksMessage(picks: string[]): string {
     return `Daily Stock Picks: ${picks.join(', ')}`;
+  }
+
+  private async handleStockCommand(channel: TextChannel | DMChannel | NewsChannel | ThreadChannel | VoiceChannel, symbol: string) {
+    try {
+      console.log(`Fetching stock data for ${symbol}...`);
+      const yahooQuote = await getStockQuote(symbol);
+      const stockData = convertYahooToStockData(yahooQuote);
+      await this.sendMessage(channel, this.formatStockMessage(stockData));
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      await this.sendMessage(channel, `Error fetching stock data for ${symbol}`);
+    }
   }
 } 
