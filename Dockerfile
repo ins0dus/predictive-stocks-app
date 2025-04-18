@@ -1,27 +1,28 @@
-# Use Node.js LTS version
-FROM node:18-alpine
+FROM node:18-alpine as builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Install dependencies
 COPY package*.json ./
-COPY craco.config.js ./
-
-# Install dependencies with legacy peer deps to avoid React conflicts
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build the React application
+# Build the application
 RUN npm run build
 
-# Install serve to run the production build
-RUN npm install -g serve
+# Production stage
+FROM nginx:alpine
 
-# Use $PORT environment variable from Railway
-ENV PORT=3000
+# Copy built assets from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
 
-# Start the application using serve with Railway's PORT
-CMD serve -s build -l ${PORT} 
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 
