@@ -1,45 +1,31 @@
 const path = require('path');
-const webpack = require('webpack');
 
 module.exports = {
-  resolve: {
-    fallback: {
-      "process": require.resolve("process/browser.js"),
-      "url": false
-    },
-    alias: {
-      'url-polyfill': path.resolve(__dirname, 'src/utils/urlPolyfill.ts')
-    }
-  },
-  plugins: [
-    new webpack.ProvidePlugin({
-      process: 'process/browser.js',
-    }),
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
-    })
-  ],
-  devServer: {
-    port: 3001,
-    host: 'localhost',
-    hot: true,
-    open: true,
-    historyApiFallback: true,
-    client: {
-      overlay: true,
-    },
-    onListening: function (server) {
-      const port = server.server.address().port;
-      console.log('Listening on port:', port);
-    }
+  entry: './src/index.tsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js',
   },
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.(ts|tsx)$/,
         use: 'ts-loader',
-        exclude: /node_modules\/(?!url-polyfill)/
-      }
-    ]
-  }
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
+      },
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset/resource',
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+  },
+  mode: 'development',
+  devtool: 'source-map',
 }; 
