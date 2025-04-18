@@ -1,0 +1,3 @@
+[submodule "golden-stocks-temp"]
+	path = golden-stocks-temp
+	url = https://github.com/ins0dus/Golden-Stocks.git
