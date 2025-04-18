@@ -22,8 +22,11 @@ ENV PORT=3000
 # Expose port for the web application
 EXPOSE 3000
 
+# Create a script to start both processes
+RUN echo '#!/bin/sh\nnpm run start &\nnpm run bot' > /app/start.sh && chmod +x /app/start.sh
+
 # Start both the web server and Discord bot
-CMD ["sh", "-c", "npm run start & npm run bot"]
+CMD ["/app/start.sh"]
 
 # Production stage
 FROM nginx:alpine
