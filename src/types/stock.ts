@@ -1,6 +1,6 @@
 export interface StockData {
   symbol: string;
-  name?: string;
+  name: string;
   price: number;
   change: number;
   changePercent: number;
@@ -21,11 +21,11 @@ export interface SearchResult {
 
 export interface StockQuote {
   symbol: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  dailyHigh: number;
-  dailyLow: number;
-  volume: number;
-  lastUpdated: string;
+  regularMarketPrice: number;
+  regularMarketChange: number;
+  regularMarketChangePercent: number;
+  regularMarketDayHigh: number;
+  regularMarketDayLow: number;
+  regularMarketVolume: number;
+  regularMarketTime: Date;
 } 
