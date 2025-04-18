@@ -1,6 +1,7 @@
+import { StockData } from '../types/stock';
 import yahooFinance from 'yahoo-finance2';
 
-export interface YahooQuote {
+interface YahooQuote {
   symbol: string;
   regularMarketPrice: number;
   regularMarketChange: number;
@@ -8,12 +9,42 @@ export interface YahooQuote {
   regularMarketDayHigh: number;
   regularMarketDayLow: number;
   regularMarketVolume: number;
-  marketCap?: number;
-  trailingPE?: number;
-  regularMarketTime: number;
+  marketCap: number;
+  trailingPE: number;
+  regularMarketTime: Date;
+  dividendYield?: number;
 }
 
-export const getYahooQuote = async (symbol: string): Promise<YahooQuote> => {
+interface YahooSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string;
+}
+
+interface YahooSearchResponse {
+  quotes: Array<{
+    symbol: string;
+    longname?: string;
+    shortname?: string;
+    exchange?: string;
+  }>;
+}
+
+export const searchStocks = async (query: string): Promise<YahooSearchResult[]> => {
+  try {
+    const results = await yahooFinance.search(query) as YahooSearchResponse;
+    return results.quotes.map(quote => ({
+      symbol: quote.symbol,
+      name: quote.longname || quote.shortname || quote.symbol,
+      exchange: quote.exchange || 'Unknown'
+    }));
+  } catch (error) {
+    console.error('Error searching stocks with Yahoo Finance:', error);
+    return [];
+  }
+};
+
+export const getStockQuote = async (symbol: string): Promise<YahooQuote> => {
   try {
     const quote = await yahooFinance.quote(symbol);
     return {
@@ -24,9 +55,10 @@ export const getYahooQuote = async (symbol: string): Promise<YahooQuote> => {
       regularMarketDayHigh: quote.regularMarketDayHigh || 0,
       regularMarketDayLow: quote.regularMarketDayLow || 0,
       regularMarketVolume: quote.regularMarketVolume || 0,
-      marketCap: quote.marketCap,
-      trailingPE: quote.trailingPE,
-      regularMarketTime: quote.regularMarketTime || Math.floor(Date.now() / 1000)
+      marketCap: quote.marketCap || 0,
+      trailingPE: quote.trailingPE || 0,
+      regularMarketTime: quote.regularMarketTime || new Date(),
+      dividendYield: quote.dividendYield
     };
   } catch (error) {
     console.error('Error fetching Yahoo Finance quote:', error);
@@ -34,16 +66,24 @@ export const getYahooQuote = async (symbol: string): Promise<YahooQuote> => {
   }
 };
 
-export const searchYahooStocks = async (query: string) => {
+export const convertYahooToStockData = (quote: YahooQuote): StockData => {
   try {
-    const results = await yahooFinance.search(query);
-    return results.quotes.map(quote => ({
+    return {
       symbol: quote.symbol,
-      name: quote.longname || quote.shortname || '',
-      exchange: quote.exchange || ''
-    }));
+      name: quote.symbol, // Yahoo Finance doesn't provide name in quote
+      price: quote.regularMarketPrice,
+      change: quote.regularMarketChange,
+      changePercent: quote.regularMarketChangePercent,
+      dailyHigh: quote.regularMarketDayHigh,
+      dailyLow: quote.regularMarketDayLow,
+      volume: quote.regularMarketVolume,
+      marketCap: quote.marketCap,
+      peRatio: quote.trailingPE,
+      dividendYield: quote.dividendYield || 0,
+      lastUpdated: Math.floor(quote.regularMarketTime.getTime() / 1000)
+    };
   } catch (error) {
-    console.error('Error searching Yahoo Finance:', error);
-    return [];
+    console.error('Error converting Yahoo Finance quote:', error);
+    throw error;
   }
 }; 
