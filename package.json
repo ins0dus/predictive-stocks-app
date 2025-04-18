@@ -41,7 +41,7 @@
     "build": "set GENERATE_SOURCEMAP=false && craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "bot": "ts-node src/discordBot.ts",
+    "bot": "NODE_ENV=production ts-node src/discordBot.ts",
     "start:prod": "npm run start & npm run bot"
   },
   "eslintConfig": {

@@ -22,5 +22,5 @@ ENV PORT=3000
 # Expose port for the web application
 EXPOSE 3000
 
-# Start both the web server and Discord bot
-CMD ["sh", "-c", "npm run start & npm run bot"] 
+# Start the Discord bot
+CMD ["npm", "run", "bot"] 
