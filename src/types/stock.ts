@@ -9,7 +9,6 @@ export interface StockData {
   volume: number;
   marketCap?: number;
   peRatio?: number;
-  dividendYield?: number;
   lastUpdated: string;
 }
 

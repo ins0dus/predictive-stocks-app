@@ -9,10 +9,9 @@ export interface YahooQuote {
   regularMarketDayHigh: number;
   regularMarketDayLow: number;
   regularMarketVolume: number;
-  marketCap: number;
-  trailingPE: number;
+  marketCap?: number;
+  trailingPE?: number;
   regularMarketTime: Date;
-  dividendYield?: number;
 }
 
 interface YahooSearchResult {
@@ -55,10 +54,9 @@ export const getStockQuote = async (symbol: string): Promise<YahooQuote> => {
       regularMarketDayHigh: quote.regularMarketDayHigh || 0,
       regularMarketDayLow: quote.regularMarketDayLow || 0,
       regularMarketVolume: quote.regularMarketVolume || 0,
-      marketCap: quote.marketCap || 0,
-      trailingPE: quote.trailingPE || 0,
-      regularMarketTime: quote.regularMarketTime || new Date(),
-      dividendYield: quote.dividendYield || 0
+      marketCap: quote.marketCap,
+      trailingPE: quote.trailingPE,
+      regularMarketTime: quote.regularMarketTime || new Date()
     };
   } catch (error) {
     console.error('Error fetching Yahoo Finance quote:', error);
@@ -79,8 +77,7 @@ export const convertYahooToStockData = (quote: YahooQuote): StockData => {
       volume: quote.regularMarketVolume,
       marketCap: quote.marketCap,
       peRatio: quote.trailingPE,
-      dividendYield: quote.dividendYield || 0,
-      lastUpdated: Math.floor(quote.regularMarketTime.getTime() / 1000).toString()
+      lastUpdated: quote.regularMarketTime.toISOString()
     };
   } catch (error) {
     console.error('Error converting Yahoo Finance quote:', error);

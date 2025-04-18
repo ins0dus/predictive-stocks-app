@@ -13,7 +13,6 @@ const convertYahooToStockData = (quote: YahooQuote): StockData => {
     volume: quote.regularMarketVolume,
     marketCap: quote.marketCap,
     peRatio: quote.trailingPE,
-    dividendYield: quote.dividendYield,
     lastUpdated: quote.regularMarketTime.toISOString()
   };
 };
