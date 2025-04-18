@@ -6,6 +6,9 @@ module.exports = {
     fallback: {
       "process": require.resolve("process/browser.js"),
       "url": false
+    },
+    alias: {
+      'url-polyfill': path.resolve(__dirname, 'src/utils/urlPolyfill.ts')
     }
   },
   plugins: [
@@ -29,5 +32,14 @@ module.exports = {
       const port = server.server.address().port;
       console.log('Listening on port:', port);
     }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules\/(?!url-polyfill)/
+      }
+    ]
   }
 }; 
