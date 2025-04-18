@@ -7,7 +7,7 @@ module.exports = {
             webpackConfig.resolve = {
                 ...webpackConfig.resolve,
                 fallback: {
-                    "url": require.resolve("whatwg-url"),
+                    "url": false,
                     "util": require.resolve("util/"),
                     "stream": require.resolve("stream-browserify"),
                     "buffer": require.resolve("buffer/"),
