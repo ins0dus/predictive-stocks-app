@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY craco.config.js ./
 
 # Install dependencies with legacy peer deps to avoid React conflicts
 RUN npm install --legacy-peer-deps
