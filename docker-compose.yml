@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  discord-bot:
+    build: .
+    container_name: stock-discord-bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - ALPACA_API_KEY=${ALPACA_API_KEY}
+      - ALPACA_API_SECRET=${ALPACA_API_SECRET}
+      - ALPACA_PAPER=${ALPACA_PAPER}
+    volumes:
+      - ./logs:/usr/src/app/logs 
