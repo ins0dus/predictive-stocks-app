@@ -10,8 +10,7 @@ export interface YahooQuote {
   regularMarketVolume: number;
   marketCap?: number;
   trailingPE?: number;
-  dividendYield?: number;
-  regularMarketTime: Date;
+  regularMarketTime: number;
 }
 
 export const getYahooQuote = async (symbol: string): Promise<YahooQuote> => {
@@ -27,8 +26,7 @@ export const getYahooQuote = async (symbol: string): Promise<YahooQuote> => {
       regularMarketVolume: quote.regularMarketVolume || 0,
       marketCap: quote.marketCap,
       trailingPE: quote.trailingPE,
-      dividendYield: quote.dividendYield,
-      regularMarketTime: new Date(quote.regularMarketTime * 1000)
+      regularMarketTime: quote.regularMarketTime || Math.floor(Date.now() / 1000)
     };
   } catch (error) {
     console.error('Error fetching Yahoo Finance quote:', error);

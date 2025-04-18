@@ -1,109 +1,88 @@
-import { Client, GatewayIntentBits, TextChannel, Message, DMChannel, NewsChannel, ThreadChannel, VoiceChannel, BaseChannel } from 'discord.js';
-import { getYahooQuote } from './yahooFinanceService';
+import { Client, Events, GatewayIntentBits } from 'discord.js';
+import { StockData } from '../types/stock';
+import { getStockDetails } from './stockService';
 
-interface StockPick {
-  symbol: string;
-  reason: string;
-  price: number;
-  score: number;
-  volume: number;
-}
+export class StockAnalyzer {
+  private lastAnalysis: Date = new Date();
+  private analysisInterval: number = 24 * 60 * 60 * 1000; // 24 hours
 
-class StockAnalyzer {
-  private picks: StockPick[] = [];
-
-  async getDailyPicks(): Promise<StockPick[]> {
-    // TODO: Implement stock picking logic
-    return [
-      {
-        symbol: 'SNDL',
-        reason: 'Strong volume and momentum',
-        price: 1.36,
-        score: 85,
-        volume: 500000
-      }
-    ];
-  }
-
-  async analyzeStock(symbol: string): Promise<string> {
-    const quote = await getYahooQuote(symbol);
-    return `Analysis for ${symbol}:
-Price: $${quote.regularMarketPrice}
-Change: ${quote.regularMarketChange} (${quote.regularMarketChangePercent}%)
-Volume: ${quote.regularMarketVolume}
-Market Cap: $${quote.marketCap}
-PE Ratio: ${quote.trailingPE}
-Dividend Yield: ${quote.dividendYield}%`;
+  async getDailyPicks(): Promise<string[]> {
+    const now = new Date();
+    if (now.getTime() - this.lastAnalysis.getTime() >= this.analysisInterval) {
+      // Implement stock analysis logic here
+      this.lastAnalysis = now;
+    }
+    return ['AAPL', 'GOOGL', 'MSFT']; // Placeholder
   }
 
   getStats(): string {
     return 'Performance statistics will be implemented soon';
   }
+
+  getQuoteMessage(quote: StockData): string {
+    return `${quote.symbol} Quote:
+Price: $${quote.price}
+Change: ${quote.change > 0 ? '+' : ''}${quote.change} (${quote.changePercent}%)
+High: $${quote.dailyHigh}
+Low: $${quote.dailyLow}
+Volume: ${quote.volume}
+Market Cap: $${quote.marketCap}
+PE Ratio: ${quote.peRatio}
+Last Updated: ${quote.lastUpdated}`;
+  }
 }
 
-class StockDiscordBot {
+export class StockDiscordBot {
   private client: Client;
   private analyzer: StockAnalyzer;
+  private token: string;
 
-  constructor() {
+  constructor(token: string) {
+    this.token = token;
     this.client = new Client({
       intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-      ]
+        GatewayIntentBits.MessageContent,
+      ],
     });
     this.analyzer = new StockAnalyzer();
+    this.setupEventHandlers();
+  }
 
-    this.client.on('ready', () => {
-      console.log(`Logged in as ${this.client.user?.tag}`);
+  private setupEventHandlers() {
+    this.client.once(Events.ClientReady, () => {
+      console.log('Discord bot is ready!');
     });
 
-    this.client.on('messageCreate', async (message: Message) => {
+    this.client.on(Events.MessageCreate, async (message) => {
       if (message.author.bot) return;
-      if (!message.channel.isTextBased()) return;
 
-      const channel = message.channel;
-      if (!channel) return;
-
-      // Only proceed if the channel is a type that supports sending messages
-      if (!(channel instanceof TextChannel || channel instanceof DMChannel || channel instanceof NewsChannel || channel instanceof ThreadChannel)) {
-        return;
-      }
-
-      // Type guard to ensure channel has send method
-      if (!('send' in channel)) {
-        return;
-      }
-
-      if (message.content.startsWith('!pick')) {
-        const picks = await this.analyzer.getDailyPicks();
-        const response = picks.map(pick => 
-          `${pick.symbol}: $${pick.price} (Score: ${pick.score})\nReason: ${pick.reason}`
-        ).join('\n\n');
-        await channel.send(response);
-      }
-
-      if (message.content.startsWith('!analyze')) {
-        const symbol = message.content.split(' ')[1]?.toUpperCase();
-        if (!symbol) {
-          await channel.send('Please provide a stock symbol. Usage: !analyze SYMBOL');
+      const content = message.content.toLowerCase();
+      if (content.startsWith('!stock')) {
+        const args = content.split(' ');
+        if (args.length < 2) {
+          await message.reply('Please provide a stock symbol. Example: !stock AAPL');
           return;
         }
-        const analysis = await this.analyzer.analyzeStock(symbol);
-        await channel.send(analysis);
-      }
 
-      if (message.content.startsWith('!stats')) {
-        const stats = this.analyzer.getStats();
-        await channel.send(stats);
+        const symbol = args[1].toUpperCase();
+        try {
+          const quote = await getStockDetails(symbol);
+          await message.reply(this.analyzer.getQuoteMessage(quote));
+        } catch (error) {
+          await message.reply(`Error fetching stock data for ${symbol}`);
+        }
       }
     });
   }
 
-  async login(token: string) {
-    await this.client.login(token);
+  async start() {
+    try {
+      await this.client.login(this.token);
+    } catch (error) {
+      console.error('Failed to start Discord bot:', error);
+      throw error;
+    }
   }
-}
-
-export const bot = new StockDiscordBot(); 
+} 

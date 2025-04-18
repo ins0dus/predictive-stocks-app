@@ -11,8 +11,7 @@ const convertYahooToStockData = (yahooQuote: YahooQuote): StockData => ({
   volume: yahooQuote.regularMarketVolume,
   marketCap: yahooQuote.marketCap,
   peRatio: yahooQuote.trailingPE,
-  dividendYield: yahooQuote.dividendYield,
-  lastUpdated: yahooQuote.regularMarketTime.toISOString()
+  lastUpdated: new Date(yahooQuote.regularMarketTime * 1000).toISOString()
 });
 
 export const searchStocks = async (query: string): Promise<SearchResult[]> => {
@@ -35,7 +34,7 @@ export const getStockQuote = async (symbol: string): Promise<StockQuote> => {
       dailyHigh: yahooQuote.regularMarketDayHigh,
       dailyLow: yahooQuote.regularMarketDayLow,
       volume: yahooQuote.regularMarketVolume,
-      lastUpdated: yahooQuote.regularMarketTime.toISOString()
+      lastUpdated: new Date(yahooQuote.regularMarketTime * 1000).toISOString()
     };
   } catch (error) {
     console.error('Error fetching stock quote:', error);
