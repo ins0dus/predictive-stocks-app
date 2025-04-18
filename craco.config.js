@@ -3,10 +3,11 @@ const path = require('path');
 
 module.exports = {
     webpack: {
-        configure: {
-            resolve: {
+        configure: (webpackConfig) => {
+            webpackConfig.resolve = {
+                ...webpackConfig.resolve,
                 fallback: {
-                    "url": false,
+                    "url": require.resolve("url/"),
                     "buffer": require.resolve("buffer/"),
                     "util": require.resolve("util/"),
                     "stream": require.resolve("stream-browserify"),
@@ -15,20 +16,31 @@ module.exports = {
                     "https": require.resolve("https-browserify"),
                     "os": require.resolve("os-browserify/browser"),
                     "process": require.resolve("process/browser"),
-                    "path": require.resolve("path-browserify")
-                },
-                alias: {
-                    'url': path.resolve(__dirname, 'src/utils/urlPolyfill.ts')
+                    "path": require.resolve("path-browserify"),
+                    "querystring": require.resolve("querystring-es3/"),
+                    "zlib": require.resolve("browserify-zlib"),
+                    "assert": require.resolve("assert/"),
+                    "constants": require.resolve("constants-browserify"),
+                    "fs": false,
+                    "tls": false,
+                    "net": false,
+                    "child_process": false
                 }
-            }
-        },
-        plugins: [
-            new webpack.ProvidePlugin({
-                process: 'process/browser',
-                Buffer: ['buffer', 'Buffer'],
-                URL: ['./src/utils/urlPolyfill', 'URL'],
-                URLSearchParams: ['./src/utils/urlPolyfill', 'URLSearchParams']
-            })
-        ]
+            };
+
+            webpackConfig.plugins = [
+                ...webpackConfig.plugins,
+                new webpack.ProvidePlugin({
+                    process: 'process/browser',
+                    Buffer: ['buffer', 'Buffer']
+                }),
+                new webpack.NormalModuleReplacementPlugin(
+                    /node:url/,
+                    require.resolve('url/')
+                )
+            ];
+
+            return webpackConfig;
+        }
     }
 };
