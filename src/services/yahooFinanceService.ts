@@ -1,7 +1,7 @@
 import { StockData } from '../types/stock';
 import yahooFinance from 'yahoo-finance2';
 
-interface YahooQuote {
+export interface YahooQuote {
   symbol: string;
   regularMarketPrice: number;
   regularMarketChange: number;
@@ -58,7 +58,7 @@ export const getStockQuote = async (symbol: string): Promise<YahooQuote> => {
       marketCap: quote.marketCap || 0,
       trailingPE: quote.trailingPE || 0,
       regularMarketTime: quote.regularMarketTime || new Date(),
-      dividendYield: quote.dividendYield
+      dividendYield: quote.dividendYield || 0
     };
   } catch (error) {
     console.error('Error fetching Yahoo Finance quote:', error);
@@ -80,7 +80,7 @@ export const convertYahooToStockData = (quote: YahooQuote): StockData => {
       marketCap: quote.marketCap,
       peRatio: quote.trailingPE,
       dividendYield: quote.dividendYield || 0,
-      lastUpdated: Math.floor(quote.regularMarketTime.getTime() / 1000)
+      lastUpdated: Math.floor(quote.regularMarketTime.getTime() / 1000).toString()
     };
   } catch (error) {
     console.error('Error converting Yahoo Finance quote:', error);
