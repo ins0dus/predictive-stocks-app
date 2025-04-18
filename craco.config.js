@@ -3,10 +3,11 @@ const path = require('path');
 
 module.exports = {
     webpack: {
-        configure: {
-            resolve: {
+        configure: (webpackConfig) => {
+            webpackConfig.resolve = {
+                ...webpackConfig.resolve,
                 fallback: {
-                    "url": require.resolve("url/"),
+                    "url": require.resolve("whatwg-url"),
                     "util": require.resolve("util/"),
                     "stream": require.resolve("stream-browserify"),
                     "buffer": require.resolve("buffer/"),
@@ -21,8 +22,10 @@ module.exports = {
                     "assert": require.resolve("assert/"),
                     "constants": require.resolve("constants-browserify"),
                 }
-            },
-            plugins: [
+            };
+
+            webpackConfig.plugins = [
+                ...webpackConfig.plugins || [],
                 new webpack.ProvidePlugin({
                     process: 'process/browser',
                     Buffer: ['buffer', 'Buffer'],
@@ -30,7 +33,9 @@ module.exports = {
                 new webpack.DefinePlugin({
                     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
                 })
-            ]
+            ];
+
+            return webpackConfig;
         }
     }
 };

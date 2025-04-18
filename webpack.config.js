@@ -27,7 +27,7 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     fallback: {
-      "url": require.resolve("url/"),
+      "url": require.resolve("whatwg-url"),
       "util": require.resolve("util/"),
       "stream": require.resolve("stream-browserify"),
       "buffer": require.resolve("buffer/"),
