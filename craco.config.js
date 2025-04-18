@@ -1,11 +1,12 @@
 const webpack = require('webpack');
+const path = require('path');
 
 module.exports = {
     webpack: {
         configure: {
             resolve: {
                 fallback: {
-                    "url": require.resolve("url/"),
+                    "url": false,
                     "buffer": require.resolve("buffer/"),
                     "util": require.resolve("util/"),
                     "stream": require.resolve("stream-browserify"),
@@ -15,14 +16,19 @@ module.exports = {
                     "os": require.resolve("os-browserify/browser"),
                     "process": require.resolve("process/browser"),
                     "path": require.resolve("path-browserify")
+                },
+                alias: {
+                    'url': path.resolve(__dirname, 'src/utils/urlPolyfill.ts')
                 }
             }
         },
         plugins: [
             new webpack.ProvidePlugin({
                 process: 'process/browser',
-                Buffer: ['buffer', 'Buffer']
+                Buffer: ['buffer', 'Buffer'],
+                URL: ['./src/utils/urlPolyfill', 'URL'],
+                URLSearchParams: ['./src/utils/urlPolyfill', 'URLSearchParams']
             })
         ]
     }
-}; 
+};
