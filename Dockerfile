@@ -12,8 +12,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Install production dependencies
+# Install production dependencies and concurrently
 RUN npm install --production
+RUN npm install -g concurrently ts-node
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -22,5 +23,5 @@ ENV PORT=3000
 # Expose port for the web application
 EXPOSE 3000
 
-# Start the Discord bot
-CMD ["npm", "run", "bot"] 
+# Start both the web server and Discord bot
+CMD ["npm", "run", "start"] 
